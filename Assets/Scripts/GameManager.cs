@@ -5,11 +5,15 @@ using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
-    [SerializeField] private GameObject player, border;
+    [SerializeField] private GameObject border;
     [SerializeField] private Text tmrText;
 
+    [HideInInspector] public StarterAssetsInputs input;
+    [HideInInspector] public GameObject player;
+    [HideInInspector] public bool started, treeOn, restart;
+
     private ViewManager view;
-    private StarterAssetsInputs input;
+    private NetworkManager NM;
     private Vector3 chestLayer;
     private string records;
     private bool pause;
@@ -25,8 +29,8 @@ public class GameManager : MonoBehaviour
 
     void Start()
     {
-        input = player.GetComponent<StarterAssetsInputs>();
         view = GetComponent<ViewManager>();
+        NM = GetComponent<NetworkManager>();
 
         chestLayer = new Vector3(0, 1.5f, 0);
     }
@@ -64,18 +68,22 @@ public class GameManager : MonoBehaviour
                 PlayerPrefs.SetString("Records", records);
                 PlayerPrefs.Save();
 
-                view.BurnChristmasTree();
+                treeOn = true;
+                UpdateRoomVariables();
             }
 
             if (hit.collider.name == "StartButton")
             {
-                view.StartGame();
-                border.SetActive(false);
                 hit.collider.GetComponent<ButtonController>().pressed = true;
+                started = true;
+                UpdateRoomVariables();
             }
 
             if (hit.collider.name == "RestartButton")
-                Restart();
+            {
+                restart = true;
+                UpdateRoomVariables();
+            }
         }
 
         input.press = false;
@@ -87,9 +95,9 @@ public class GameManager : MonoBehaviour
         view.records.Sort();
     }
 
-    private void Restart()
+    private void UpdateRoomVariables()
     {
-        SceneManager.LoadScene(1);
+        NM.UpdateRoomVariables(started, treeOn, restart);
     }
 
     private void Pause()
@@ -105,12 +113,32 @@ public class GameManager : MonoBehaviour
 
     void Update()
     {
-        if (input.press)
-            CheckPressOpp();
+        if (input != null)
+        {
+            if (input.press)
+                CheckPressOpp();
 
-        if (pause != input.pause)
-            Pause();
+            if (pause != input.pause)
+                Pause();
+        }
 
-        Debug.Log(input.pause);
+        if (restart)
+        {
+            NM.LeaveRoom();
+            SceneManager.LoadScene(1);
+        }
+
+        if (treeOn)
+        {
+            view.BurnChristmasTree();
+            treeOn = false;
+        }
+
+        if (started)
+        {
+            view.StartGame();
+            border.SetActive(false);
+            started = false;
+        }
     }
 }

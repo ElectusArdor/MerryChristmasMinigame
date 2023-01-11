@@ -2,18 +2,19 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using System;
-using UnityEditor;
 
 public class ViewManager : MonoBehaviour
 {
     public List<string> records = new List<string>();
     public GameObject pauseMenu;
 
-    [SerializeField] private GameObject player, victory;
+    [SerializeField] private GameObject victory;
     [SerializeField] private Light starLight;
     [SerializeField] private GameObject[] lamps, hints;
     [SerializeField] private Text tmrText, recordsText;
     [SerializeField] private float colorChangeTime;
+
+    [HideInInspector] public GameObject player;
 
     private TimeSpan ts;
     private List<MeshRenderer> renderers = new List<MeshRenderer>();
@@ -124,7 +125,10 @@ public class ViewManager : MonoBehaviour
 
     private void LateUpdate()
     {
-        ShowHints();
-        TurnHints();
+        if (player != null)
+        {
+            ShowHints();
+            TurnHints();
+        }
     }
 }
